@@ -1,6 +1,7 @@
 use clap::Args;
 use clap::CommandFactory;
 use clap::Parser;
+use clap::builder::PossibleValuesParser;
 use clap_complete::Shell;
 use clap_complete::generate;
 use codex_arg0::arg0_dispatch_or_else;
@@ -326,12 +327,28 @@ fn run_update_action(action: UpdateAction) -> anyhow::Result<()> {
 #[derive(Debug, Default, Parser, Clone)]
 struct FeatureToggles {
     /// Enable a feature (repeatable). Equivalent to `-c features.<name>=true`.
-    #[arg(long = "enable", value_name = "FEATURE", action = clap::ArgAction::Append, global = true)]
+    #[arg(
+        long = "enable",
+        value_name = "FEATURE",
+        action = clap::ArgAction::Append,
+        value_parser = feature_value_parser(),
+        global = true
+    )]
     enable: Vec<String>,
 
     /// Disable a feature (repeatable). Equivalent to `-c features.<name>=false`.
-    #[arg(long = "disable", value_name = "FEATURE", action = clap::ArgAction::Append, global = true)]
+    #[arg(
+        long = "disable",
+        value_name = "FEATURE",
+        action = clap::ArgAction::Append,
+        value_parser = feature_value_parser(),
+        global = true
+    )]
     disable: Vec<String>,
+}
+
+fn feature_value_parser() -> PossibleValuesParser {
+    PossibleValuesParser::new(codex_core::features::FEATURES.iter().map(|spec| spec.key))
 }
 
 impl FeatureToggles {
